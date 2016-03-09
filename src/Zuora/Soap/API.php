@@ -90,7 +90,6 @@ class API
         'InvoiceItem'                   => 'Zuora\Soap\InvoiceItem',
         'Refund'                        => 'Zuora\Soap\Refund',
         'RefundInvoicePayment'          => 'Zuora\Soap\RefundInvoicePayment',
-        'InvoiceItem'                   => 'Zuora\Soap\InvoiceItem',
         'InvoicePayment'                => 'Zuora\Soap\InvoicePayment',
         'Payment'                       => 'Zuora\Soap\Payment',
         'PaymentMethod'                 => 'Zuora\Soap\PaymentMethod',
@@ -128,7 +127,6 @@ class API
         'UnexpectedErrorFault'          => 'Zuora\Soap\UnexpectedErrorFault',
         'TaxationItem'                  => 'Zuora\Soap\TaxationItem',
         'PaymentMethodSnapshot'         => 'Zuora\Soap\PaymentMethodSnapshot',
-        'RefundInvoicePayment'          => 'Zuora\Soap\RefundInvoicePayment',
     );
 
     /**
@@ -139,7 +137,9 @@ class API
      */
     protected function __construct($config)
     {
-        self::$_config = $config;
+        self::$_config = array_merge(array(
+            'api_url' => 'http://api.zuora.com/',
+        ),$config);
 
         $this->_client = new SoapClient(self::$_config->wsdl,
             array(
@@ -169,7 +169,7 @@ class API
             throw new ZuoraFault('ERROR in '.__METHOD__, $e, $this->_client->__getLastRequestHeaders(), $this->_client->__getLastRequest(), $this->_client->__getLastResponseHeaders(), $this->_client->__getLastResponse());
         }
         $header = new SoapHeader(
-            'http://api.zuora.com/',
+            self::$_config->api_url,
             'SessionHeader',
             array(
                 'session' => $result->result->Session,
@@ -197,7 +197,7 @@ class API
     public function setQueryOptions($batchSize)
     {
         $header = new SoapHeader(
-            'http://api.zuora.com/',
+            self::$_config->api_url,
             'QueryOptions',
             array(
                 'batchSize' => $batchSize,
@@ -209,7 +209,7 @@ class API
     public function setQueueHeader($resultEmail, $userId)
     {
         $header = new SoapHeader(
-            'http://api.zuora.com/',
+            self::$_config->api_url,
             'QueueHeader',
             array(
                 'resultEmail' => $resultEmail,
@@ -374,7 +374,7 @@ class API
     public function update(array $zObjects)
     {
         if (count($zObjects) > 50) {
-            ZuoraFault('ERROR in '.__METHOD__.': only supports up to 50 objects');
+            throw new ZuoraFault('ERROR in '.__METHOD__.': only supports up to 50 objects');
         }
         $soapVars = array();
         $type = 'Zuora\Soap\Object';
